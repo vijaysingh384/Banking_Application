@@ -56,9 +56,10 @@ public class UserController {
 
     }
 
-//    public LoanDTO getLoan(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") double loanamount){
-//        return userService.getLoan(accountId , loanamount);
-//    }
+    @PostMapping("/loan")
+    public LoanDTO getLoan(@RequestParam(value = "accountId") long accountId, @RequestParam("loanamount") double loanamount){
+        return userService.getLoan(accountId , loanamount);
+    }
 
 
 }

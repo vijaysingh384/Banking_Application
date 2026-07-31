@@ -4,6 +4,7 @@ import com.example.banking_backend.Model.AccountDTO;
 import com.example.banking_backend.Model.LoanDTO;
 import com.example.banking_backend.Model.UserDTO;
 import com.example.banking_backend.Repositary.AccountRepositary;
+import com.example.banking_backend.Repositary.LoanRepositary;
 import com.example.banking_backend.Repositary.UserRepositary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,9 @@ public class UserService {
 
     @Autowired
     private AccountRepositary accountRepositary;
+
+    @Autowired
+    private LoanRepositary loanRepositary;
 
     public UserDTO register(UserDTO userDTO) {
         return userRepositary.save(userDTO);
@@ -61,8 +65,16 @@ public class UserService {
         return accountRepositary.save(account);
     }
 
-//    public LoanDTO getLoan(long accountId, double loanamount) {
-//        List<LoanDTO> loan = accountRepositary.findAll();
-//
-//    }
+    public LoanDTO getLoan(long accountId, double loanamount) {
+        LoanDTO loan = loanRepositary.findById(accountId).orElse(null);
+        loan.setSanctionAmount(loan.getSanctionAmount() + loanamount);
+//        LoanDTO loan = new LoanDTO();
+//        loan.setId(accountId);
+//        loan.setUserId(accountId);
+//        loan.setSanctionAmount(loanamount);
+        return loanRepositary.save(loan);
+
+
+
+    }
 }
