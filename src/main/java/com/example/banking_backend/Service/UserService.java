@@ -1,6 +1,9 @@
 package com.example.banking_backend.Service;
 
+import com.example.banking_backend.Model.AccountDTO;
+import com.example.banking_backend.Model.LoanDTO;
 import com.example.banking_backend.Model.UserDTO;
+import com.example.banking_backend.Repositary.AccountRepositary;
 import com.example.banking_backend.Repositary.UserRepositary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,6 +14,9 @@ import java.util.List;
 public class UserService {
     @Autowired
     private UserRepositary userRepositary;
+
+    @Autowired
+    private AccountRepositary accountRepositary;
 
     public UserDTO register(UserDTO userDTO) {
         return userRepositary.save(userDTO);
@@ -24,4 +30,39 @@ public class UserService {
     public UserDTO getUserById(Long id) {
         return userRepositary.findById(id).orElse(null);
     }
+
+    public AccountDTO createAccount(AccountDTO accountDTO) {
+       List<AccountDTO> account = accountRepositary.findAll();
+       return  accountRepositary.save(accountDTO);
+
+    }
+
+    public List<AccountDTO> getAllAccount() {
+        return accountRepositary.findAll();
+    }
+
+    public AccountDTO getAccountById(Long id) {
+        return accountRepositary.findById(id).orElse(null);
+    }
+
+
+
+    public AccountDTO depositMoney(long accountId, double amount) {
+        AccountDTO account = accountRepositary.findById(accountId).orElse(null);
+        account.setBalance(account.getBalance() + amount);
+        return accountRepositary.save(account);
+
+    }
+
+
+    public AccountDTO withdrawMoney(long accountId, double amount) {
+        AccountDTO account = accountRepositary.findById(accountId).orElse(null);
+        account.setBalance(account.getBalance() - amount);
+        return accountRepositary.save(account);
+    }
+
+//    public LoanDTO getLoan(long accountId, double loanamount) {
+//        List<LoanDTO> loan = accountRepositary.findAll();
+//
+//    }
 }

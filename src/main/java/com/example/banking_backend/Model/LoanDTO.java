@@ -10,7 +10,7 @@ import lombok.Data;
 @Entity
 public class LoanDTO {
     @Id
-    private Long id;
+    private long id;
     private long userId;
     private double sanctionAmount;
 
