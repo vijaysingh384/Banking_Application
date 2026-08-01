@@ -53,7 +53,8 @@ public class UserService {
 
     public AccountDTO depositMoney(long accountId, double amount) {
         AccountDTO account = accountRepositary.findById(accountId).orElse(null);
-        account.setBalance(account.getBalance() + amount);
+        double initialBalance = account.getBalance();
+        account.setBalance(initialBalance + amount);
         return accountRepositary.save(account);
 
     }
@@ -61,6 +62,11 @@ public class UserService {
 
     public AccountDTO withdrawMoney(long accountId, double amount) {
         AccountDTO account = accountRepositary.findById(accountId).orElse(null);
+        double initialBalance = account.getBalance();
+        if (amount > initialBalance) {
+            System.out.println("Withdrawal amount exceeded");
+            return null;
+        }
         account.setBalance(account.getBalance() - amount);
         return accountRepositary.save(account);
     }
@@ -76,5 +82,9 @@ public class UserService {
 
 
 
+    }
+
+    public List<LoanDTO> getAllLoan() {
+        return loanRepositary.findAll();
     }
 }
