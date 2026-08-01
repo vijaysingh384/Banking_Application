@@ -54,7 +54,9 @@ public class UserController {
         users.add(user);
         responseDTO.setDtos(users);
 
+
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+
     }
 
     @PostMapping("/account")

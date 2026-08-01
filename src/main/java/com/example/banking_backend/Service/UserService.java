@@ -1,5 +1,6 @@
 package com.example.banking_backend.Service;
 
+import com.example.banking_backend.Exception.ResourceNotFoundException;
 import com.example.banking_backend.Model.AccountDTO;
 import com.example.banking_backend.Model.LoanDTO;
 import com.example.banking_backend.Model.UserDTO;
@@ -32,7 +33,7 @@ public class UserService {
     }
 
     public UserDTO getUserById(Long id) {
-        return userRepositary.findById(id).orElse(null);
+        return userRepositary.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found for this ID: " + id));
     }
 
     public AccountDTO createAccount(AccountDTO accountDTO) {
@@ -46,13 +47,13 @@ public class UserService {
     }
 
     public AccountDTO getAccountById(Long id) {
-        return accountRepositary.findById(id).orElse(null);
+        return accountRepositary.findById(id).orElseThrow(() -> new ResourceNotFoundException("No Account found for this ID: " + id));
     }
 
 
 
     public AccountDTO depositMoney(long accountId, double amount) {
-        AccountDTO account = accountRepositary.findById(accountId).orElse(null);
+        AccountDTO account = accountRepositary.findById(accountId).orElseThrow(() -> new ResourceNotFoundException("Account not for for this id " + accountId));
         double initialBalance = account.getBalance();
         account.setBalance(initialBalance + amount);
         return accountRepositary.save(account);
@@ -61,7 +62,7 @@ public class UserService {
 
 
     public AccountDTO withdrawMoney(long accountId, double amount) {
-        AccountDTO account = accountRepositary.findById(accountId).orElse(null);
+        AccountDTO account = accountRepositary.findById(accountId).orElseThrow(() -> new ResourceNotFoundException("Account not for for this id " + accountId));
         double initialBalance = account.getBalance();
         if (amount > initialBalance) {
             System.out.println("Withdrawal amount exceeded");
@@ -72,7 +73,7 @@ public class UserService {
     }
 
     public LoanDTO getLoan(long accountId, double loanamount) {
-        LoanDTO loan = loanRepositary.findById(accountId).orElse(null);
+        LoanDTO loan = loanRepositary.findById(accountId).orElseThrow(() -> new ResourceNotFoundException("No Loan found for this ID: " + accountId));
         loan.setSanctionAmount(loan.getSanctionAmount() + loanamount);
 //        LoanDTO loan = new LoanDTO();
 //        loan.setId(accountId);
