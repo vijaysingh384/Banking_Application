@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping
 public class UserController {
     @Autowired
@@ -19,7 +20,7 @@ public class UserController {
     @Autowired
     private ResponseDTO responseDTO;
 
-    @PostMapping("/register")
+    @PostMapping("/adduser")
     public ResponseEntity<ResponseDTO> register(@RequestBody UserDTO userDTO){
         UserDTO SavedUser = userService.register(userDTO);
         responseDTO.setStatuscode(HttpStatus.OK.value());
@@ -28,7 +29,7 @@ public class UserController {
         ArrayList<UserDTO> dtos = new ArrayList<>();
         dtos.add(SavedUser);
         responseDTO.setDtos(dtos);
-        return new ResponseEntity<ResponseDTO>(responseDTO , HttpStatus.CREATED);
+        return new ResponseEntity<>(responseDTO , HttpStatus.CREATED);
     }
 
     @GetMapping("/users")
@@ -138,6 +139,18 @@ public class UserController {
         responseDTO.setMessage("All loan details fetch");
         responseDTO.setLoandtos(loan);
         return new ResponseEntity<>(responseDTO , HttpStatus.OK);
+
+    }
+
+    @GetMapping("/loans")
+    public ResponseEntity<ResponseDTO> getAllLoans(){
+        List<LoanDTO> getLoans = userService.getAllLoans();
+        responseDTO.setStatuscode(HttpStatus.OK.value());
+        responseDTO.setError(false);
+        responseDTO.setMessage("Loans fetch successfully");
+        responseDTO.setLoandtos(getLoans);
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+
 
     }
 

@@ -88,4 +88,8 @@ public class UserService {
     public List<LoanDTO> getAllLoan() {
         return loanRepositary.findAll();
     }
+
+    public List<LoanDTO> getAllLoans() {
+        return loanRepositary.findAll();
+    }
 }
