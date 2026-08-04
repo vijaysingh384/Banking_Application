@@ -39,11 +39,11 @@ public class SequrityConfig {
                 "GET",
                 "POST",
                 "PUT",
-                "DELETE",
-                "OPTIONS"
+                "DELETE"
+
         ));
 
-        configuration.setAllowedHeaders(List.of("*"));
+         configuration.setAllowedHeaders(List.of("*"));
 
         configuration.setAllowCredentials(true);
 
