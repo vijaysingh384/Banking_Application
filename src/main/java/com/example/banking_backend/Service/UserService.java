@@ -1,18 +1,18 @@
 package com.example.banking_backend.Service;
 
 import com.example.banking_backend.Exception.ResourceNotFoundException;
-import com.example.banking_backend.Model.AccountDTO;
-import com.example.banking_backend.Model.LoanDTO;
-import com.example.banking_backend.Model.UserDTO;
+import com.example.banking_backend.Model.*;
 import com.example.banking_backend.Repositary.AccountRepositary;
 import com.example.banking_backend.Repositary.LoanRepositary;
 import com.example.banking_backend.Repositary.UserRepositary;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class UserService {
     @Autowired
     private UserRepositary userRepositary;
@@ -22,6 +22,7 @@ public class UserService {
 
     @Autowired
     private LoanRepositary loanRepositary;
+
 
     public UserDTO register(UserDTO userDTO) {
         return userRepositary.save(userDTO);
@@ -91,5 +92,28 @@ public class UserService {
 
     public List<LoanDTO> getAllLoans() {
         return loanRepositary.findAll();
+    }
+
+
+    public void  TransferFund(Long fromAccountId , Long toAccountId, double amount) throws Exception {
+        AccountDTO sender = accountRepositary.findById(fromAccountId).orElseThrow(() -> new ResourceNotFoundException("Sender account not found"));
+        AccountDTO reciver = accountRepositary.findById(toAccountId).orElseThrow(() -> new ResourceNotFoundException("Reciver account not found"));
+        if(fromAccountId.equals(toAccountId)){
+            throw new Exception("cannot transfer to same account");
+
+        }
+        if(amount <=0){
+            throw new Exception("Amount should greater than zero");
+        }
+
+        if(sender.getBalance() < amount){
+            throw new Exception("Insufficient balance");
+        }
+
+        sender.setBalance(sender.getBalance() - amount);
+        reciver.setBalance(reciver.getBalance() + amount);
+        accountRepositary.save(sender);
+        accountRepositary.save(reciver);
+
     }
 }

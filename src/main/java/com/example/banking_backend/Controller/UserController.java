@@ -100,6 +100,25 @@ public class UserController {
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
+    @PostMapping("/transferAmount")
+    public ResponseEntity<ResponseDTO> TransferFund(@RequestParam long fromAccountId , @RequestParam long toAccountId , @RequestParam double amount){
+        try{
+            userService.TransferFund(fromAccountId , toAccountId , amount);
+            responseDTO.setStatuscode(HttpStatus.OK.value());
+            responseDTO.setError(false);
+            responseDTO.setMessage("Money transferred successfully.");
+            return new ResponseEntity<>(responseDTO , HttpStatus.OK);
+
+        }
+        catch (Exception e){
+            responseDTO.setStatuscode(400);
+            responseDTO.setError(true);
+            responseDTO.setMessage(e.getMessage());
+            return ResponseEntity.badRequest().body(responseDTO);
+        }
+
+    }
+
     @PostMapping("/depositMoney")
     public ResponseEntity<ResponseDTO> depositMoney(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") double amount){
         AccountDTO depositamount = userService.depositMoney(accountId , amount);
@@ -121,6 +140,7 @@ public class UserController {
         return new ResponseEntity<>(responseDTO , HttpStatus.OK);
 
     }
+
 
     @PostMapping("/loan")
     public ResponseEntity<ResponseDTO> getLoan(@RequestParam(value = "accountId") long accountId, @RequestParam("loanamount") double loanamount){
@@ -153,6 +173,10 @@ public class UserController {
 
 
     }
+
+
+
+
 
 
 

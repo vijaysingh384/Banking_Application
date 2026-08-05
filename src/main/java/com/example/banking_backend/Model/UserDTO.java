@@ -8,7 +8,9 @@ import lombok.Data;
 @Table
 public class UserDTO {
     @Id
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    private long userId;
     private String name;
 
 
