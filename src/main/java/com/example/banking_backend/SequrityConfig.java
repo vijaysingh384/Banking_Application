@@ -1,6 +1,5 @@
 package com.example.banking_backend;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -10,20 +9,21 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-
 import java.util.List;
 
 @Configuration
 public class SequrityConfig {
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                );
+            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
+            );
 
         return http.build();
     }
@@ -33,22 +33,20 @@ public class SequrityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:3003")); // React (Vite)
-
-        configuration.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE"
-
+        configuration.setAllowedOrigins(List.of(
+            "https://banking-application-frontend-m06afs43h-vijaysingh384s-projects.vercel.app",
+            "http://localhost:3003"
         ));
 
-         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
 
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+            new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration("/**", configuration);
 
