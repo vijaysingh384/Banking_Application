@@ -36,6 +36,7 @@ public class SequrityConfig {
         configuration.setAllowedOrigins(List.of(
                 "https://banking-application-frontend-15npyr5as-vijaysingh384s-projects.vercel.app",
                 "https://banking-application-frontend-m06afs43h-vijaysingh384s-projects.vercel.app",
+                "https://banking-application-frontend-8h8l0x03s-vijaysingh384s-projects.vercel.app",
                 "http://localhost:3003"
         ));
 
