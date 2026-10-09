@@ -34,8 +34,9 @@ public class SequrityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(List.of(
-            "https://banking-application-frontend-m06afs43h-vijaysingh384s-projects.vercel.app",
-            "http://localhost:3003"
+                "https://banking-application-frontend-15npyr5as-vijaysingh384s-projects.vercel.app",
+                "https://banking-application-frontend-m06afs43h-vijaysingh384s-projects.vercel.app",
+                "http://localhost:3003"
         ));
 
         configuration.setAllowedMethods(List.of(
