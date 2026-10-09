@@ -15,10 +15,14 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
                         .allowedOrigins(
-                                "https://banking-application-frontend-m06afs43h-vijaysingh384s-projects.vercel.app"
+                                "https://banking-application-frontend-m06afs43h-vijaysingh384s-projects.vercel.app",
+                                "http://localhost:3003"
                         )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
+                        .allowedMethods(
+                                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                        )
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
             }
         };
     }
