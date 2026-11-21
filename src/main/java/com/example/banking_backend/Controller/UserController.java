@@ -1,6 +1,7 @@
 package com.example.banking_backend.Controller;
 
 import com.example.banking_backend.Model.*;
+import com.example.banking_backend.Service.AuthService;
 import com.example.banking_backend.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,18 +12,61 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping
 public class UserController {
     @Autowired
     private UserService userService;
 
     @Autowired
-    private ResponseDTO responseDTO;
+    private AuthService authService;
+
+    @GetMapping("/profile")
+    public ResponseEntity<ResponseDTO> getProfile(){
+        ResponseDTO responseDTO = new ResponseDTO();
+        UserDTO user = userService.getCurrentUser();
+        responseDTO.setStatuscode(HttpStatus.OK.value());
+        responseDTO.setError(false);
+        responseDTO.setMessage("Profile fetched successfully");
+        responseDTO.setDtos(List.of(user));
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
+
+    @GetMapping("/my/accounts")
+    public ResponseEntity<ResponseDTO> getMyAccounts(){
+        ResponseDTO responseDTO = new ResponseDTO();
+        responseDTO.setStatuscode(HttpStatus.OK.value());
+        responseDTO.setError(false);
+        responseDTO.setMessage("Accounts fetched successfully");
+        responseDTO.setAccountdtos(userService.getMyAccounts());
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
+
+    @GetMapping("/my/loans")
+    public ResponseEntity<ResponseDTO> getMyLoans(){
+        ResponseDTO responseDTO = new ResponseDTO();
+        responseDTO.setStatuscode(HttpStatus.OK.value());
+        responseDTO.setError(false);
+        responseDTO.setMessage("Loans fetched successfully");
+        responseDTO.setLoandtos(userService.getMyLoans());
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
+
+    @PostMapping("/applyLoan")
+    public ResponseEntity<ResponseDTO> applyLoan(@RequestParam("amount") double amount){
+        ResponseDTO responseDTO = new ResponseDTO();
+        LoanDTO loan = userService.applyLoan(amount);
+        responseDTO.setStatuscode(HttpStatus.CREATED.value());
+        responseDTO.setError(false);
+        responseDTO.setMessage("Loan applied successfully");
+        responseDTO.setLoandtos(List.of(loan));
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
+    }
 
     @PostMapping("/adduser")
     public ResponseEntity<ResponseDTO> register(@RequestBody UserDTO userDTO){
-        UserDTO SavedUser = userService.register(userDTO);
+        ResponseDTO responseDTO = new ResponseDTO();
+        userDTO.setRole("USER");
+        UserDTO SavedUser = authService.signup(userDTO);
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
         responseDTO.setMessage("User created successfully");
@@ -34,6 +78,7 @@ public class UserController {
 
     @GetMapping("/users")
     public ResponseEntity<ResponseDTO> getAllusers(){
+        ResponseDTO responseDTO = new ResponseDTO();
         List<UserDTO> getusers = userService.getAllusers();
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
@@ -44,7 +89,7 @@ public class UserController {
 
     @GetMapping("/users/{id}")
     public ResponseEntity<ResponseDTO> getUserById(@PathVariable Long id) {
-
+        ResponseDTO responseDTO = new ResponseDTO();
         UserDTO user = userService.getUserById(id);
 
         responseDTO.setStatuscode(HttpStatus.OK.value());
@@ -62,6 +107,7 @@ public class UserController {
 
     @PostMapping("/account")
     public ResponseEntity<ResponseDTO> createAccount(@RequestBody AccountDTO accountDTO){
+        ResponseDTO responseDTO = new ResponseDTO();
         AccountDTO UserAccount = userService.createAccount(accountDTO);
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
@@ -74,6 +120,7 @@ public class UserController {
 
     @GetMapping("/accounts")
     public ResponseEntity<ResponseDTO> getAllAccount(){
+        ResponseDTO responseDTO = new ResponseDTO();
         List<AccountDTO> getAccounts = userService.getAllAccount();
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
@@ -86,7 +133,7 @@ public class UserController {
 
     @GetMapping("/account/{id}")
     public ResponseEntity<ResponseDTO> getAccountById(@PathVariable Long id) {
-
+        ResponseDTO responseDTO = new ResponseDTO();
         AccountDTO account = userService.getAccountById(id);
 
         responseDTO.setStatuscode(HttpStatus.OK.value());
@@ -102,6 +149,7 @@ public class UserController {
 
     @PostMapping("/transferAmount")
     public ResponseEntity<ResponseDTO> TransferFund(@RequestParam long fromAccountId , @RequestParam long toAccountId , @RequestParam double amount){
+        ResponseDTO responseDTO = new ResponseDTO();
         try{
             userService.TransferFund(fromAccountId , toAccountId , amount);
             responseDTO.setStatuscode(HttpStatus.OK.value());
@@ -121,6 +169,7 @@ public class UserController {
 
     @PostMapping("/depositMoney")
     public ResponseEntity<ResponseDTO> depositMoney(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") double amount){
+        ResponseDTO responseDTO = new ResponseDTO();
         AccountDTO depositamount = userService.depositMoney(accountId , amount);
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
@@ -131,7 +180,14 @@ public class UserController {
 
     @PostMapping("/withdrawMoney")
     public ResponseEntity<ResponseDTO> withdrawMoney(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") double amount){
+        ResponseDTO responseDTO = new ResponseDTO();
         AccountDTO withdrawamount = userService.withdrawMoney(accountId , amount);
+        if (withdrawamount == null) {
+            responseDTO.setStatuscode(HttpStatus.BAD_REQUEST.value());
+            responseDTO.setError(true);
+            responseDTO.setMessage("Withdrawal amount exceeded");
+            return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
+        }
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
         responseDTO.setMessage("Amount withdraw successfully");
@@ -144,6 +200,7 @@ public class UserController {
 
     @PostMapping("/loan")
     public ResponseEntity<ResponseDTO> getLoan(@RequestParam(value = "accountId") long accountId, @RequestParam("loanamount") double loanamount){
+        ResponseDTO responseDTO = new ResponseDTO();
         LoanDTO getaloan = userService.getLoan(accountId , loanamount);
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
@@ -153,6 +210,7 @@ public class UserController {
     }
 
     public ResponseEntity<ResponseDTO> getAllLoan(){
+        ResponseDTO responseDTO = new ResponseDTO();
         List<LoanDTO> loan = userService.getAllLoan();
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
@@ -164,6 +222,7 @@ public class UserController {
 
     @GetMapping("/loans")
     public ResponseEntity<ResponseDTO> getAllLoans(){
+        ResponseDTO responseDTO = new ResponseDTO();
         List<LoanDTO> getLoans = userService.getAllLoans();
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);

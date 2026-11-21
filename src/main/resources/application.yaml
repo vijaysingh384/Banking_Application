@@ -19,3 +19,7 @@ spring:
 eureka:
   client:
     enabled: false
+
+admin:
+  username: ${ADMIN_USERNAME:admin}
+  password: ${ADMIN_PASSWORD:admin123}
