@@ -19,11 +19,14 @@ public class AuthService {
 
     public UserDTO signup(UserDTO userDTO) {
         String username = userDTO.getUsername() == null ? "" : userDTO.getUsername().trim();
-        if (username.isEmpty()) {
-            throw new IllegalArgumentException("Username is required");
+        if (username.length() < 3 || username.length() > 30) {
+            throw new IllegalArgumentException("Username must be between 3 and 30 characters");
         }
-        if (userDTO.getPassword() == null || userDTO.getPassword().length() < 4) {
-            throw new IllegalArgumentException("Password must be at least 4 characters");
+        if (username.contains(" ")) {
+            throw new IllegalArgumentException("Username must not contain spaces");
+        }
+        if (userDTO.getPassword() == null || userDTO.getPassword().length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters");
         }
         if (userRepositary.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists");

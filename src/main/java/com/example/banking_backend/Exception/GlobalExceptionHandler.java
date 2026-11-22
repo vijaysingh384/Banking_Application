@@ -7,6 +7,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -15,6 +17,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -22,6 +26,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetails> genericException(Exception e , WebRequest webRequest){
         return buildErrorDetails(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", webRequest);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorDetails> validationFailed(MethodArgumentNotValidException e, WebRequest webRequest){
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+        for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
+            fieldErrors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
+        }
+        ErrorDetails details = errorDetails(HttpStatus.BAD_REQUEST, "Validation failed", webRequest);
+        details.setFieldErrors(fieldErrors);
+        return new ResponseEntity<>(details, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -61,12 +76,16 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorDetails> buildErrorDetails(HttpStatus status, String message, WebRequest webRequest) {
+        return new ResponseEntity<>(errorDetails(status, message, webRequest), status);
+    }
+
+    private ErrorDetails errorDetails(HttpStatus status, String message, WebRequest webRequest) {
         ErrorDetails details = new ErrorDetails();
         details.setDateTime(LocalDateTime.now());
         details.setStatus(status.value());
         details.setMsg(message);
         details.setPath(webRequest.getDescription(false));
-        return new ResponseEntity<>(details, status);
+        return details;
     }
 
 }

@@ -19,11 +19,16 @@ public class AdminInitializer implements CommandLineRunner {
     @Value("${admin.username:admin}")
     private String adminUsername;
 
-    @Value("${admin.password:admin123}")
+    @Value("${admin.password:}")
     private String adminPassword;
 
     @Override
     public void run(String... args) {
+        if (adminPassword == null || adminPassword.isBlank()) {
+            throw new IllegalStateException(
+                    "ADMIN_PASSWORD is not set. Set the ADMIN_PASSWORD environment variable to a strong "
+                            + "password before starting the application.");
+        }
         if (userRepositary.existsByUsername(adminUsername)) {
             return;
         }
@@ -33,6 +38,5 @@ public class AdminInitializer implements CommandLineRunner {
         admin.setPassword(adminPassword);
         admin.setRole("ADMIN");
         authService.signup(admin);
-        System.out.println("Admin user created with username: " + adminUsername);
     }
 }

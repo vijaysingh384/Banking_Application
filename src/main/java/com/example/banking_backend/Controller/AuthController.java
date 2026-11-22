@@ -3,6 +3,7 @@ package com.example.banking_backend.Controller;
 import com.example.banking_backend.Model.*;
 import com.example.banking_backend.Service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class AuthController {
     private SecurityContextRepository securityContextRepository;
 
     @PostMapping("/signup")
-    public ResponseEntity<ResponseDTO> signup(@RequestBody UserDTO userDTO){
+    public ResponseEntity<ResponseDTO> signup(@Valid @RequestBody UserDTO userDTO){
         ResponseDTO responseDTO = new ResponseDTO();
         userDTO.setRole("USER");
         UserDTO savedUser = authService.signup(userDTO);

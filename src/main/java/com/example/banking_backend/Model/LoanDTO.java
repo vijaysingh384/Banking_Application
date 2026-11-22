@@ -28,6 +28,7 @@ public class LoanDTO {
     private long accountId;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(20)")
     private LoanStatus status;
 
 }

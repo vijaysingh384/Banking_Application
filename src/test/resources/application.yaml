@@ -16,3 +16,7 @@ spring:
 eureka:
   client:
     enabled: false
+
+admin:
+  username: admin
+  password: test-admin-password

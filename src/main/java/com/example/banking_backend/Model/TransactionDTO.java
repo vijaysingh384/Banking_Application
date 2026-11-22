@@ -24,6 +24,7 @@ public class TransactionDTO {
     private long accountId;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(20)")
     private TransactionType type;
 
     @Column(precision = 19, scale = 2)
