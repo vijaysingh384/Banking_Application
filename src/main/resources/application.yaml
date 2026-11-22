@@ -25,10 +25,6 @@ spring:
       ddl-auto: ${DDL_AUTO:validate}
     show-sql: false
 
-eureka:
-  client:
-    enabled: false
-
 admin:
   username: ${ADMIN_USERNAME:admin}
   password: ${ADMIN_PASSWORD:}

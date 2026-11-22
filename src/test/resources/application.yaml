@@ -13,10 +13,6 @@ spring:
       ddl-auto: create-drop
     show-sql: false
 
-eureka:
-  client:
-    enabled: false
-
 admin:
   username: admin
   password: test-admin-password
