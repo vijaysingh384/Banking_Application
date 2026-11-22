@@ -203,17 +203,6 @@ public class UserController {
 
     }
 
-    public ResponseEntity<ResponseDTO> getAllLoan() {
-        ResponseDTO responseDTO = new ResponseDTO();
-        List<LoanDTO> loan = userService.getAllLoan();
-        responseDTO.setStatuscode(HttpStatus.OK.value());
-        responseDTO.setError(false);
-        responseDTO.setMessage("All loan details fetch");
-        responseDTO.setLoandtos(loan);
-        return new ResponseEntity<>(responseDTO , HttpStatus.OK);
-
-    }
-
     @GetMapping("/loans")
     public ResponseEntity<ResponseDTO> getAllLoans(){
         ResponseDTO responseDTO = new ResponseDTO();

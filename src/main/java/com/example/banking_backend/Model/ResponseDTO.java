@@ -13,7 +13,6 @@ public class ResponseDTO {
     private int Statuscode;
     private List<UserDTO> dtos;
     private List<AccountDTO> accountdtos;
-    private List<AmountDTO> amountdtos;
     private List<LoanDTO> loandtos;
     private List<TransactionDTO> transactiondtos;
 }
