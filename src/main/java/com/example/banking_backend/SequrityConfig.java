@@ -53,7 +53,7 @@ public class SequrityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/signup", "/login", "/csrf").permitAll()
                 .requestMatchers("/admin/**", "/adduser", "/users", "/users/**",
-                        "/accounts", "/account/**", "/loans", "/loan").hasRole("ADMIN")
+                        "/accounts", "/account/**", "/loans").hasRole("ADMIN")
                 .anyRequest().authenticated()
             );
 

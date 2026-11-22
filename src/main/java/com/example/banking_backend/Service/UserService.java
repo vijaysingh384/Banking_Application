@@ -50,10 +50,18 @@ public class UserService {
     public AccountDTO createAccount(AccountDTO accountDTO) {
        userRepositary.findById(accountDTO.getUserId())
                .orElseThrow(() -> new ResourceNotFoundException("User not found for this ID: " + accountDTO.getUserId()));
-       if (accountDTO.getBalance() == null) {
-           accountDTO.setBalance(BigDecimal.ZERO);
-       }
+       // Account id, version and balance are owned by the server, never by the request body.
+       accountDTO.setId(0);
+       accountDTO.setVersion(0);
+       accountDTO.setBalance(BigDecimal.ZERO);
        return accountRepositary.save(accountDTO);
+    }
+
+    public AccountDTO openMyAccount() {
+        AccountDTO account = new AccountDTO();
+        account.setUserId(getCurrentUser().getId());
+        account.setBalance(BigDecimal.ZERO);
+        return accountRepositary.save(account);
     }
 
     public List<AccountDTO> getAllAccount() {
@@ -134,11 +142,14 @@ public class UserService {
         return savedAccount;
     }
 
-    public LoanDTO applyLoan(BigDecimal amount) {
+    public LoanDTO applyLoan(long accountId, BigDecimal amount) {
         BigDecimal loanAmount = requirePositiveAmount(amount, "Loan amount should be greater than zero");
+        AccountDTO account = getOwnAccount(accountId);
         LoanDTO loan = new LoanDTO();
         loan.setUserId(getCurrentUser().getId());
+        loan.setAccountId(account.getId());
         loan.setSanctionAmount(loanAmount);
+        loan.setStatus(LoanStatus.PENDING);
         return loanRepositary.save(loan);
     }
 
@@ -146,14 +157,30 @@ public class UserService {
         return loanRepositary.findByUserId(getCurrentUser().getId());
     }
 
-    public LoanDTO getLoan(long accountId, BigDecimal loanamount) {
-        BigDecimal addedAmount = requirePositiveAmount(loanamount, "Loan amount should be greater than zero");
-        LoanDTO loan = loanRepositary.findById(accountId).orElseThrow(() -> new ResourceNotFoundException("No Loan found for this ID: " + accountId));
-        loan.setSanctionAmount(loan.getSanctionAmount().add(addedAmount));
+    public LoanDTO approveLoan(long loanId) {
+        LoanDTO loan = getPendingLoan(loanId);
+        AccountDTO account = getAccount(loan.getAccountId());
+
+        loan.setStatus(LoanStatus.APPROVED);
+        account.setBalance(balanceOf(account).add(loan.getSanctionAmount()));
+        accountRepositary.save(account);
+        recordTransaction(account, TransactionType.DEPOSIT, loan.getSanctionAmount(), null, LocalDateTime.now());
         return loanRepositary.save(loan);
+    }
 
+    public LoanDTO rejectLoan(long loanId) {
+        LoanDTO loan = getPendingLoan(loanId);
+        loan.setStatus(LoanStatus.REJECTED);
+        return loanRepositary.save(loan);
+    }
 
-
+    private LoanDTO getPendingLoan(long loanId) {
+        LoanDTO loan = loanRepositary.findById(loanId)
+                .orElseThrow(() -> new ResourceNotFoundException("No Loan found for this ID: " + loanId));
+        if (loan.getStatus() != LoanStatus.PENDING) {
+            throw new IllegalArgumentException("Only a pending loan can be decided, this loan is " + loan.getStatus());
+        }
+        return loan;
     }
 
     public List<LoanDTO> getAllLoan() {

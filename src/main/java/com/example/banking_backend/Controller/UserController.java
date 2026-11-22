@@ -42,6 +42,16 @@ public class UserController {
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
+    @PostMapping("/my/accounts")
+    public ResponseEntity<ResponseDTO> openMyAccount(){
+        ResponseDTO responseDTO = new ResponseDTO();
+        responseDTO.setStatuscode(HttpStatus.CREATED.value());
+        responseDTO.setError(false);
+        responseDTO.setMessage("Account created successfully");
+        responseDTO.setAccountdtos(List.of(userService.openMyAccount()));
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
+    }
+
     @GetMapping("/my/accounts/{id}/transactions")
     public ResponseEntity<ResponseDTO> getMyTransactions(@PathVariable long id){
         ResponseDTO responseDTO = new ResponseDTO();
@@ -63,9 +73,10 @@ public class UserController {
     }
 
     @PostMapping("/applyLoan")
-    public ResponseEntity<ResponseDTO> applyLoan(@RequestParam("amount") BigDecimal amount){
+    public ResponseEntity<ResponseDTO> applyLoan(@RequestParam("accountId") long accountId,
+                                                 @RequestParam("amount") BigDecimal amount){
         ResponseDTO responseDTO = new ResponseDTO();
-        LoanDTO loan = userService.applyLoan(amount);
+        LoanDTO loan = userService.applyLoan(accountId, amount);
         responseDTO.setStatuscode(HttpStatus.CREATED.value());
         responseDTO.setError(false);
         responseDTO.setMessage("Loan applied successfully");
@@ -192,19 +203,7 @@ public class UserController {
 
     }
 
-
-    @PostMapping("/loan")
-    public ResponseEntity<ResponseDTO> getLoan(@RequestParam(value = "accountId") long accountId, @RequestParam("loanamount") BigDecimal loanamount){
-        ResponseDTO responseDTO = new ResponseDTO();
-        LoanDTO getaloan = userService.getLoan(accountId , loanamount);
-        responseDTO.setStatuscode(HttpStatus.OK.value());
-        responseDTO.setError(false);
-        responseDTO.setMessage("Loan sencened successfully");
-        responseDTO.setLoandtos(List.of(getaloan));
-        return new ResponseEntity<>(responseDTO , HttpStatus.OK);
-    }
-
-    public ResponseEntity<ResponseDTO> getAllLoan(){
+    public ResponseEntity<ResponseDTO> getAllLoan() {
         ResponseDTO responseDTO = new ResponseDTO();
         List<LoanDTO> loan = userService.getAllLoan();
         responseDTO.setStatuscode(HttpStatus.OK.value());
