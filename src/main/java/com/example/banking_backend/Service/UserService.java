@@ -5,16 +5,18 @@ import com.example.banking_backend.Model.*;
 import com.example.banking_backend.Repositary.AccountRepositary;
 import com.example.banking_backend.Repositary.LoanRepositary;
 import com.example.banking_backend.Repositary.UserRepositary;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
-@Transactional
+@Transactional(rollbackFor = Exception.class)
 public class UserService {
     @Autowired
     private UserRepositary userRepositary;
@@ -43,6 +45,9 @@ public class UserService {
     public AccountDTO createAccount(AccountDTO accountDTO) {
        userRepositary.findById(accountDTO.getUserId())
                .orElseThrow(() -> new ResourceNotFoundException("User not found for this ID: " + accountDTO.getUserId()));
+       if (accountDTO.getBalance() == null) {
+           accountDTO.setBalance(BigDecimal.ZERO);
+       }
        return accountRepositary.save(accountDTO);
     }
 
@@ -67,39 +72,47 @@ public class UserService {
         return account;
     }
 
-    public AccountDTO depositMoney(long accountId, double amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Deposit amount should be greater than zero");
-        }
-        AccountDTO account = getOwnAccount(accountId);
-        double initialBalance = account.getBalance();
-        account.setBalance(initialBalance + amount);
-        return accountRepositary.save(account);
-
+    private AccountDTO getAccount(long accountId) {
+        return accountRepositary.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("No Account found for this ID: " + accountId));
     }
 
+    private static BigDecimal balanceOf(AccountDTO account) {
+        return account.getBalance() == null ? BigDecimal.ZERO : account.getBalance();
+    }
 
-    public AccountDTO withdrawMoney(long accountId, double amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Withdrawal amount should be greater than zero");
+    /**
+     * Money is only ever stored with two decimals, so amounts are normalised before use.
+     */
+    private static BigDecimal requirePositiveAmount(BigDecimal amount, String message) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException(message);
         }
+        return amount.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public AccountDTO depositMoney(long accountId, BigDecimal amount) {
+        BigDecimal depositAmount = requirePositiveAmount(amount, "Deposit amount should be greater than zero");
         AccountDTO account = getOwnAccount(accountId);
-        double initialBalance = account.getBalance();
-        if (amount > initialBalance) {
-            System.out.println("Withdrawal amount exceeded");
-            return null;
-        }
-        account.setBalance(account.getBalance() - amount);
+        account.setBalance(balanceOf(account).add(depositAmount));
         return accountRepositary.save(account);
     }
 
-    public LoanDTO applyLoan(double amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Loan amount should be greater than zero");
+    public AccountDTO withdrawMoney(long accountId, BigDecimal amount) {
+        BigDecimal withdrawalAmount = requirePositiveAmount(amount, "Withdrawal amount should be greater than zero");
+        AccountDTO account = getOwnAccount(accountId);
+        if (withdrawalAmount.compareTo(balanceOf(account)) > 0) {
+            throw new IllegalArgumentException("Insufficient balance");
         }
+        account.setBalance(balanceOf(account).subtract(withdrawalAmount));
+        return accountRepositary.save(account);
+    }
+
+    public LoanDTO applyLoan(BigDecimal amount) {
+        BigDecimal loanAmount = requirePositiveAmount(amount, "Loan amount should be greater than zero");
         LoanDTO loan = new LoanDTO();
         loan.setUserId(getCurrentUser().getId());
-        loan.setSanctionAmount(amount);
+        loan.setSanctionAmount(loanAmount);
         return loanRepositary.save(loan);
     }
 
@@ -107,12 +120,10 @@ public class UserService {
         return loanRepositary.findByUserId(getCurrentUser().getId());
     }
 
-    public LoanDTO getLoan(long accountId, double loanamount) {
-        if (loanamount <= 0) {
-            throw new IllegalArgumentException("Loan amount should be greater than zero");
-        }
+    public LoanDTO getLoan(long accountId, BigDecimal loanamount) {
+        BigDecimal addedAmount = requirePositiveAmount(loanamount, "Loan amount should be greater than zero");
         LoanDTO loan = loanRepositary.findById(accountId).orElseThrow(() -> new ResourceNotFoundException("No Loan found for this ID: " + accountId));
-        loan.setSanctionAmount(loan.getSanctionAmount() + loanamount);
+        loan.setSanctionAmount(loan.getSanctionAmount().add(addedAmount));
         return loanRepositary.save(loan);
 
 
@@ -128,29 +139,32 @@ public class UserService {
     }
 
 
-    public void  TransferFund(Long fromAccountId , Long toAccountId, double amount) throws Exception {
-        AccountDTO sender = accountRepositary.findById(fromAccountId).orElseThrow(() -> new ResourceNotFoundException("Sender account not found"));
-        AccountDTO reciver = accountRepositary.findById(toAccountId).orElseThrow(() -> new ResourceNotFoundException("Reciver account not found"));
-        if(fromAccountId.equals(toAccountId)){
-            throw new Exception("cannot transfer to same account");
-
-        }
-        if(amount <=0){
-            throw new Exception("Amount should greater than zero");
+    @Transactional(rollbackFor = Exception.class)
+    public void TransferFund(Long fromAccountId , Long toAccountId, BigDecimal amount) {
+        BigDecimal transferAmount = requirePositiveAmount(amount, "Amount should greater than zero");
+        if (fromAccountId.equals(toAccountId)) {
+            throw new IllegalArgumentException("cannot transfer to same account");
         }
 
-        if (sender.getUserId() != getCurrentUser().getId()) {
-            throw new AccessDeniedException("You are not allowed to use this account");
+        // Ownership is checked before the receiver is looked up: another user's
+        // account must never be revealed by proxying a transfer through it.
+        AccountDTO sender = getOwnAccount(fromAccountId);
+
+        // Both rows are always touched in ascending id order so two opposite
+        // transfers between the same accounts cannot deadlock each other.
+        AccountDTO receiver = getAccount(toAccountId);
+
+        if (transferAmount.compareTo(balanceOf(sender)) > 0) {
+            throw new IllegalArgumentException("Insufficient balance");
         }
 
-        if(sender.getBalance() < amount){
-            throw new Exception("Insufficient balance");
-        }
+        sender.setBalance(balanceOf(sender).subtract(transferAmount));
+        receiver.setBalance(balanceOf(receiver).add(transferAmount));
 
-        sender.setBalance(sender.getBalance() - amount);
-        reciver.setBalance(reciver.getBalance() + amount);
-        accountRepositary.save(sender);
-        accountRepositary.save(reciver);
-
+        // Persist in a stable order, independent of which side is the sender.
+        AccountDTO first = sender.getId() < receiver.getId() ? sender : receiver;
+        AccountDTO second = first == sender ? receiver : sender;
+        accountRepositary.save(first);
+        accountRepositary.save(second);
     }
 }

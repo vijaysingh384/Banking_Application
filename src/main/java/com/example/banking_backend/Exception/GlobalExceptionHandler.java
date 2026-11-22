@@ -4,6 +4,7 @@ import com.example.banking_backend.Model.ErrorDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -47,6 +48,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorDetails> accessDenied(AccessDeniedException e, WebRequest webRequest){
         return buildErrorDetails(HttpStatus.FORBIDDEN, e.getMessage(), webRequest);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorDetails> conflictingUpdate(ObjectOptimisticLockingFailureException e, WebRequest webRequest){
+        return buildErrorDetails(HttpStatus.CONFLICT, "The record was changed by another request, please retry", webRequest);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

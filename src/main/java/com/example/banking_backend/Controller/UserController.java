@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +53,7 @@ public class UserController {
     }
 
     @PostMapping("/applyLoan")
-    public ResponseEntity<ResponseDTO> applyLoan(@RequestParam("amount") double amount){
+    public ResponseEntity<ResponseDTO> applyLoan(@RequestParam("amount") BigDecimal amount){
         ResponseDTO responseDTO = new ResponseDTO();
         LoanDTO loan = userService.applyLoan(amount);
         responseDTO.setStatuscode(HttpStatus.CREATED.value());
@@ -148,27 +149,17 @@ public class UserController {
     }
 
     @PostMapping("/transferAmount")
-    public ResponseEntity<ResponseDTO> TransferFund(@RequestParam long fromAccountId , @RequestParam long toAccountId , @RequestParam double amount){
+    public ResponseEntity<ResponseDTO> TransferFund(@RequestParam long fromAccountId , @RequestParam long toAccountId , @RequestParam BigDecimal amount){
         ResponseDTO responseDTO = new ResponseDTO();
-        try{
-            userService.TransferFund(fromAccountId , toAccountId , amount);
-            responseDTO.setStatuscode(HttpStatus.OK.value());
-            responseDTO.setError(false);
-            responseDTO.setMessage("Money transferred successfully.");
-            return new ResponseEntity<>(responseDTO , HttpStatus.OK);
-
-        }
-        catch (Exception e){
-            responseDTO.setStatuscode(400);
-            responseDTO.setError(true);
-            responseDTO.setMessage(e.getMessage());
-            return ResponseEntity.badRequest().body(responseDTO);
-        }
-
+        userService.TransferFund(fromAccountId , toAccountId , amount);
+        responseDTO.setStatuscode(HttpStatus.OK.value());
+        responseDTO.setError(false);
+        responseDTO.setMessage("Money transferred successfully.");
+        return new ResponseEntity<>(responseDTO , HttpStatus.OK);
     }
 
     @PostMapping("/depositMoney")
-    public ResponseEntity<ResponseDTO> depositMoney(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") double amount){
+    public ResponseEntity<ResponseDTO> depositMoney(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") BigDecimal amount){
         ResponseDTO responseDTO = new ResponseDTO();
         AccountDTO depositamount = userService.depositMoney(accountId , amount);
         responseDTO.setStatuscode(HttpStatus.OK.value());
@@ -179,15 +170,9 @@ public class UserController {
     }
 
     @PostMapping("/withdrawMoney")
-    public ResponseEntity<ResponseDTO> withdrawMoney(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") double amount){
+    public ResponseEntity<ResponseDTO> withdrawMoney(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") BigDecimal amount){
         ResponseDTO responseDTO = new ResponseDTO();
         AccountDTO withdrawamount = userService.withdrawMoney(accountId , amount);
-        if (withdrawamount == null) {
-            responseDTO.setStatuscode(HttpStatus.BAD_REQUEST.value());
-            responseDTO.setError(true);
-            responseDTO.setMessage("Withdrawal amount exceeded");
-            return new ResponseEntity<>(responseDTO, HttpStatus.BAD_REQUEST);
-        }
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
         responseDTO.setMessage("Amount withdraw successfully");
@@ -199,7 +184,7 @@ public class UserController {
 
 
     @PostMapping("/loan")
-    public ResponseEntity<ResponseDTO> getLoan(@RequestParam(value = "accountId") long accountId, @RequestParam("loanamount") double loanamount){
+    public ResponseEntity<ResponseDTO> getLoan(@RequestParam(value = "accountId") long accountId, @RequestParam("loanamount") BigDecimal loanamount){
         ResponseDTO responseDTO = new ResponseDTO();
         LoanDTO getaloan = userService.getLoan(accountId , loanamount);
         responseDTO.setStatuscode(HttpStatus.OK.value());
