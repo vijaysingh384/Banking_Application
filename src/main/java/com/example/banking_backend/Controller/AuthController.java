@@ -52,6 +52,12 @@ public class AuthController {
 
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
+
+        // Prevent session fixation: a pre-login session (e.g. the CSRF token session) gets a new id.
+        if (request.getSession(false) != null) {
+            request.changeSessionId();
+        }
+
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
 

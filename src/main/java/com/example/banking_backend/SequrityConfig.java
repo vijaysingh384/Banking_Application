@@ -1,6 +1,7 @@
 package com.example.banking_backend;
 
 import com.example.banking_backend.Repositary.UserRepositary;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -78,16 +79,12 @@ public class SequrityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${cors.allowed-origins}") List<String> allowedOrigins) {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(
-                "https://banking-application-frontend-15npyr5as-vijaysingh384s-projects.vercel.app",
-                "https://banking-application-frontend-m06afs43h-vijaysingh384s-projects.vercel.app",
-                "https://banking-application-frontend-8h8l0x03s-vijaysingh384s-projects.vercel.app",
-                "http://localhost:3003"
-        ));
+        configuration.setAllowedOrigins(allowedOrigins);
 
         configuration.setAllowedMethods(List.of(
             "GET", "POST", "PUT", "DELETE", "OPTIONS"
