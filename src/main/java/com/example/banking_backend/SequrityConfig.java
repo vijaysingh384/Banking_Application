@@ -19,6 +19,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -33,7 +35,12 @@ public class SequrityConfig {
             throws Exception {
 
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                // Read the raw cookie value from the X-XSRF-TOKEN header: the SPA cannot
+                // reproduce the XOR encoded (BREACH mitigated) value.
+                .csrfTokenRequestHandler(csrfTokenRequestHandler())
+                .ignoringRequestMatchers("/login", "/signup"))
             .cors(Customizer.withDefaults())
             .logout(logout -> logout.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
@@ -44,13 +51,22 @@ public class SequrityConfig {
                         -> response.sendError(HttpStatus.FORBIDDEN.value(), "You are not allowed to access this resource"))
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/signup", "/login").permitAll()
+                .requestMatchers("/signup", "/login", "/csrf").permitAll()
                 .requestMatchers("/admin/**", "/adduser", "/users", "/users/**",
                         "/accounts", "/account/**", "/loans", "/loan").hasRole("ADMIN")
                 .anyRequest().authenticated()
             );
 
         return http.build();
+    }
+
+    @Bean
+    public CsrfTokenRequestAttributeHandler csrfTokenRequestHandler() {
+        CsrfTokenRequestAttributeHandler handler = new CsrfTokenRequestAttributeHandler();
+        // "null" disables deferred loading, so the token (and its cookie) is always
+        // rendered eagerly for this server-side, cookie based setup.
+        handler.setCsrfRequestAttributeName(null);
+        return handler;
     }
 
     @Bean
@@ -90,7 +106,9 @@ public class SequrityConfig {
             "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of(
+            "Content-Type", "Accept", "Accept-Language", "X-Requested-With", "X-XSRF-TOKEN"
+        ));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =

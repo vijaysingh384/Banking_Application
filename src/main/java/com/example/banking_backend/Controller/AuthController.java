@@ -14,9 +14,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class AuthController {
@@ -39,6 +42,15 @@ public class AuthController {
         responseDTO.setMessage("Signup successful");
         responseDTO.setDtos(List.of(savedUser));
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/csrf")
+    public ResponseEntity<Map<String, String>> csrf(CsrfToken csrfToken){
+        Map<String, String> token = new LinkedHashMap<>();
+        token.put("token", csrfToken.getToken());
+        token.put("headerName", csrfToken.getHeaderName());
+        token.put("parameterName", csrfToken.getParameterName());
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping("/login")
