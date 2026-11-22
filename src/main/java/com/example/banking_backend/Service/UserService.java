@@ -4,6 +4,7 @@ import com.example.banking_backend.Exception.ResourceNotFoundException;
 import com.example.banking_backend.Model.*;
 import com.example.banking_backend.Repositary.AccountRepositary;
 import com.example.banking_backend.Repositary.LoanRepositary;
+import com.example.banking_backend.Repositary.TransactionRepositary;
 import com.example.banking_backend.Repositary.UserRepositary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,6 +28,9 @@ public class UserService {
 
     @Autowired
     private LoanRepositary loanRepositary;
+
+    @Autowired
+    private TransactionRepositary transactionRepositary;
 
 
     public UserDTO getCurrentUser() {
@@ -91,11 +96,30 @@ public class UserService {
         return amount.setScale(2, RoundingMode.HALF_UP);
     }
 
+    private TransactionDTO recordTransaction(AccountDTO account, TransactionType type, BigDecimal amount,
+                                             Long counterpartyAccountId, LocalDateTime timestamp) {
+        TransactionDTO transaction = new TransactionDTO();
+        transaction.setAccountId(account.getId());
+        transaction.setType(type);
+        transaction.setAmount(amount);
+        transaction.setBalanceAfter(balanceOf(account));
+        transaction.setTimestamp(timestamp);
+        transaction.setCounterpartyAccountId(counterpartyAccountId);
+        return transactionRepositary.save(transaction);
+    }
+
+    public List<TransactionDTO> getMyTransactions(long accountId) {
+        AccountDTO account = getOwnAccount(accountId);
+        return transactionRepositary.findByAccountIdOrderByTimestampDescIdDesc(account.getId());
+    }
+
     public AccountDTO depositMoney(long accountId, BigDecimal amount) {
         BigDecimal depositAmount = requirePositiveAmount(amount, "Deposit amount should be greater than zero");
         AccountDTO account = getOwnAccount(accountId);
         account.setBalance(balanceOf(account).add(depositAmount));
-        return accountRepositary.save(account);
+        AccountDTO savedAccount = accountRepositary.save(account);
+        recordTransaction(savedAccount, TransactionType.DEPOSIT, depositAmount, null, LocalDateTime.now());
+        return savedAccount;
     }
 
     public AccountDTO withdrawMoney(long accountId, BigDecimal amount) {
@@ -105,7 +129,9 @@ public class UserService {
             throw new IllegalArgumentException("Insufficient balance");
         }
         account.setBalance(balanceOf(account).subtract(withdrawalAmount));
-        return accountRepositary.save(account);
+        AccountDTO savedAccount = accountRepositary.save(account);
+        recordTransaction(savedAccount, TransactionType.WITHDRAW, withdrawalAmount, null, LocalDateTime.now());
+        return savedAccount;
     }
 
     public LoanDTO applyLoan(BigDecimal amount) {
@@ -166,5 +192,10 @@ public class UserService {
         AccountDTO second = first == sender ? receiver : sender;
         accountRepositary.save(first);
         accountRepositary.save(second);
+
+        // Both rows and their history entries commit or roll back together.
+        LocalDateTime timestamp = LocalDateTime.now();
+        recordTransaction(sender, TransactionType.TRANSFER_OUT, transferAmount, receiver.getId(), timestamp);
+        recordTransaction(receiver, TransactionType.TRANSFER_IN, transferAmount, sender.getId(), timestamp);
     }
 }

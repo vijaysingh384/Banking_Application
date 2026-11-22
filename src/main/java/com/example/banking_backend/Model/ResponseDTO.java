@@ -15,4 +15,5 @@ public class ResponseDTO {
     private List<AccountDTO> accountdtos;
     private List<AmountDTO> amountdtos;
     private List<LoanDTO> loandtos;
+    private List<TransactionDTO> transactiondtos;
 }

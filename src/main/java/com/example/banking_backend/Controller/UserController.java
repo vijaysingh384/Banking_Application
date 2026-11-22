@@ -42,6 +42,16 @@ public class UserController {
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
+    @GetMapping("/my/accounts/{id}/transactions")
+    public ResponseEntity<ResponseDTO> getMyTransactions(@PathVariable long id){
+        ResponseDTO responseDTO = new ResponseDTO();
+        responseDTO.setStatuscode(HttpStatus.OK.value());
+        responseDTO.setError(false);
+        responseDTO.setMessage("Transactions fetched successfully");
+        responseDTO.setTransactiondtos(userService.getMyTransactions(id));
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
+
     @GetMapping("/my/loans")
     public ResponseEntity<ResponseDTO> getMyLoans(){
         ResponseDTO responseDTO = new ResponseDTO();
