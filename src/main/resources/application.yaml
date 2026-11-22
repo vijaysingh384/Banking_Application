@@ -28,8 +28,7 @@ spring:
   # A database created by an older version of the app has no schema history yet,
   # so adopt it at version 0 and let the migrations upgrade it.
   flyway:
-    baseline-on-migrate: true
-    baseline-version: 0
+    baseline-on-migrate: false
 
 admin:
   username: ${ADMIN_USERNAME:admin}
