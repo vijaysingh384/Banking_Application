@@ -13,6 +13,10 @@ spring:
       ddl-auto: create-drop
     show-sql: false
 
+  # The migrations are MySQL specific; tests build their schema with Hibernate.
+  flyway:
+    enabled: false
+
 admin:
   username: admin
   password: test-admin-password
