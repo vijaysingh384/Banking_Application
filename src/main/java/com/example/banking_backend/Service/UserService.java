@@ -2,10 +2,10 @@ package com.example.banking_backend.Service;
 
 import com.example.banking_backend.Exception.ResourceNotFoundException;
 import com.example.banking_backend.Model.*;
-import com.example.banking_backend.Repositary.AccountRepositary;
-import com.example.banking_backend.Repositary.LoanRepositary;
-import com.example.banking_backend.Repositary.TransactionRepositary;
-import com.example.banking_backend.Repositary.UserRepositary;
+import com.example.banking_backend.Repository.AccountRepository;
+import com.example.banking_backend.Repository.LoanRepository;
+import com.example.banking_backend.Repository.TransactionRepository;
+import com.example.banking_backend.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,64 +21,64 @@ import java.util.List;
 @Transactional(rollbackFor = Exception.class)
 public class UserService {
     @Autowired
-    private UserRepositary userRepositary;
+    private UserRepository userRepository;
 
     @Autowired
-    private AccountRepositary accountRepositary;
+    private AccountRepository accountRepository;
 
     @Autowired
-    private LoanRepositary loanRepositary;
+    private LoanRepository loanRepository;
 
     @Autowired
-    private TransactionRepositary transactionRepositary;
+    private TransactionRepository transactionRepository;
 
 
     public UserDTO getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepositary.findByUsername(username)
+        return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found for this username: " + username));
     }
 
-    public List<UserDTO> getAllusers() {
-        return userRepositary.findAll();
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll();
     }
 
     public UserDTO getUserById(Long id) {
-        return userRepositary.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found for this ID: " + id));
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found for this ID: " + id));
     }
 
     public AccountDTO createAccount(AccountDTO accountDTO) {
-       userRepositary.findById(accountDTO.getUserId())
+       userRepository.findById(accountDTO.getUserId())
                .orElseThrow(() -> new ResourceNotFoundException("User not found for this ID: " + accountDTO.getUserId()));
        // Account id, version and balance are owned by the server, never by the request body.
        accountDTO.setId(0);
        accountDTO.setVersion(0);
        accountDTO.setBalance(BigDecimal.ZERO);
-       return accountRepositary.save(accountDTO);
+       return accountRepository.save(accountDTO);
     }
 
     public AccountDTO openMyAccount() {
         AccountDTO account = new AccountDTO();
         account.setUserId(getCurrentUser().getId());
         account.setBalance(BigDecimal.ZERO);
-        return accountRepositary.save(account);
+        return accountRepository.save(account);
     }
 
-    public List<AccountDTO> getAllAccount() {
-        return accountRepositary.findAll();
+    public List<AccountDTO> getAllAccounts() {
+        return accountRepository.findAll();
     }
 
     public AccountDTO getAccountById(Long id) {
-        return accountRepositary.findById(id).orElseThrow(() -> new ResourceNotFoundException("No Account found for this ID: " + id));
+        return accountRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No Account found for this ID: " + id));
     }
 
     public List<AccountDTO> getMyAccounts() {
-        return accountRepositary.findByUserId(getCurrentUser().getId());
+        return accountRepository.findByUserId(getCurrentUser().getId());
     }
 
     private AccountDTO getOwnAccount(long accountId) {
-        AccountDTO account = accountRepositary.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException("Account not for for this id " + accountId));
+        AccountDTO account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found for this id " + accountId));
         if (account.getUserId() != getCurrentUser().getId()) {
             throw new AccessDeniedException("You are not allowed to use this account");
         }
@@ -86,7 +86,7 @@ public class UserService {
     }
 
     private AccountDTO getAccount(long accountId) {
-        return accountRepositary.findById(accountId)
+        return accountRepository.findById(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("No Account found for this ID: " + accountId));
     }
 
@@ -113,19 +113,19 @@ public class UserService {
         transaction.setBalanceAfter(balanceOf(account));
         transaction.setTimestamp(timestamp);
         transaction.setCounterpartyAccountId(counterpartyAccountId);
-        return transactionRepositary.save(transaction);
+        return transactionRepository.save(transaction);
     }
 
     public List<TransactionDTO> getMyTransactions(long accountId) {
         AccountDTO account = getOwnAccount(accountId);
-        return transactionRepositary.findByAccountIdOrderByTimestampDescIdDesc(account.getId());
+        return transactionRepository.findByAccountIdOrderByTimestampDescIdDesc(account.getId());
     }
 
     public AccountDTO depositMoney(long accountId, BigDecimal amount) {
         BigDecimal depositAmount = requirePositiveAmount(amount, "Deposit amount should be greater than zero");
         AccountDTO account = getOwnAccount(accountId);
         account.setBalance(balanceOf(account).add(depositAmount));
-        AccountDTO savedAccount = accountRepositary.save(account);
+        AccountDTO savedAccount = accountRepository.save(account);
         recordTransaction(savedAccount, TransactionType.DEPOSIT, depositAmount, null, LocalDateTime.now());
         return savedAccount;
     }
@@ -137,7 +137,7 @@ public class UserService {
             throw new IllegalArgumentException("Insufficient balance");
         }
         account.setBalance(balanceOf(account).subtract(withdrawalAmount));
-        AccountDTO savedAccount = accountRepositary.save(account);
+        AccountDTO savedAccount = accountRepository.save(account);
         recordTransaction(savedAccount, TransactionType.WITHDRAW, withdrawalAmount, null, LocalDateTime.now());
         return savedAccount;
     }
@@ -150,11 +150,11 @@ public class UserService {
         loan.setAccountId(account.getId());
         loan.setSanctionAmount(loanAmount);
         loan.setStatus(LoanStatus.PENDING);
-        return loanRepositary.save(loan);
+        return loanRepository.save(loan);
     }
 
     public List<LoanDTO> getMyLoans() {
-        return loanRepositary.findByUserId(getCurrentUser().getId());
+        return loanRepository.findByUserId(getCurrentUser().getId());
     }
 
     public LoanDTO approveLoan(long loanId) {
@@ -163,19 +163,19 @@ public class UserService {
 
         loan.setStatus(LoanStatus.APPROVED);
         account.setBalance(balanceOf(account).add(loan.getSanctionAmount()));
-        accountRepositary.save(account);
+        accountRepository.save(account);
         recordTransaction(account, TransactionType.DEPOSIT, loan.getSanctionAmount(), null, LocalDateTime.now());
-        return loanRepositary.save(loan);
+        return loanRepository.save(loan);
     }
 
     public LoanDTO rejectLoan(long loanId) {
         LoanDTO loan = getPendingLoan(loanId);
         loan.setStatus(LoanStatus.REJECTED);
-        return loanRepositary.save(loan);
+        return loanRepository.save(loan);
     }
 
     private LoanDTO getPendingLoan(long loanId) {
-        LoanDTO loan = loanRepositary.findById(loanId)
+        LoanDTO loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new ResourceNotFoundException("No Loan found for this ID: " + loanId));
         if (loan.getStatus() != LoanStatus.PENDING) {
             throw new IllegalArgumentException("Only a pending loan can be decided, this loan is " + loan.getStatus());
@@ -184,12 +184,12 @@ public class UserService {
     }
 
     public List<LoanDTO> getAllLoans() {
-        return loanRepositary.findAll();
+        return loanRepository.findAll();
     }
 
 
     @Transactional(rollbackFor = Exception.class)
-    public void TransferFund(Long fromAccountId , Long toAccountId, BigDecimal amount) {
+    public void transferFund(Long fromAccountId , Long toAccountId, BigDecimal amount) {
         BigDecimal transferAmount = requirePositiveAmount(amount, "Amount should greater than zero");
         if (fromAccountId.equals(toAccountId)) {
             throw new IllegalArgumentException("cannot transfer to same account");
@@ -213,8 +213,8 @@ public class UserService {
         // Persist in a stable order, independent of which side is the sender.
         AccountDTO first = sender.getId() < receiver.getId() ? sender : receiver;
         AccountDTO second = first == sender ? receiver : sender;
-        accountRepositary.save(first);
-        accountRepositary.save(second);
+        accountRepository.save(first);
+        accountRepository.save(second);
 
         // Both rows and their history entries commit or roll back together.
         LocalDateTime timestamp = LocalDateTime.now();

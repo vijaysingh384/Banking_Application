@@ -88,20 +88,20 @@ public class UserController {
     public ResponseEntity<ResponseDTO> register(@RequestBody UserDTO userDTO){
         ResponseDTO responseDTO = new ResponseDTO();
         userDTO.setRole("USER");
-        UserDTO SavedUser = authService.signup(userDTO);
+        UserDTO savedUser = authService.signup(userDTO);
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
         responseDTO.setMessage("User created successfully");
         ArrayList<UserDTO> dtos = new ArrayList<>();
-        dtos.add(SavedUser);
+        dtos.add(savedUser);
         responseDTO.setDtos(dtos);
         return new ResponseEntity<>(responseDTO , HttpStatus.CREATED);
     }
 
     @GetMapping("/users")
-    public ResponseEntity<ResponseDTO> getAllusers(){
+    public ResponseEntity<ResponseDTO> getAllUsers(){
         ResponseDTO responseDTO = new ResponseDTO();
-        List<UserDTO> getusers = userService.getAllusers();
+        List<UserDTO> getusers = userService.getAllUsers();
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
         responseDTO.setMessage("User fetch Successfully");
@@ -141,9 +141,9 @@ public class UserController {
     }
 
     @GetMapping("/accounts")
-    public ResponseEntity<ResponseDTO> getAllAccount(){
+    public ResponseEntity<ResponseDTO> getAllAccounts(){
         ResponseDTO responseDTO = new ResponseDTO();
-        List<AccountDTO> getAccounts = userService.getAllAccount();
+        List<AccountDTO> getAccounts = userService.getAllAccounts();
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
         responseDTO.setMessage("Account fetch successfully");
@@ -170,9 +170,9 @@ public class UserController {
     }
 
     @PostMapping("/transferAmount")
-    public ResponseEntity<ResponseDTO> TransferFund(@RequestParam long fromAccountId , @RequestParam long toAccountId , @RequestParam BigDecimal amount){
+    public ResponseEntity<ResponseDTO> transferFund(@RequestParam long fromAccountId , @RequestParam long toAccountId , @RequestParam BigDecimal amount){
         ResponseDTO responseDTO = new ResponseDTO();
-        userService.TransferFund(fromAccountId , toAccountId , amount);
+        userService.transferFund(fromAccountId , toAccountId , amount);
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
         responseDTO.setMessage("Money transferred successfully.");
@@ -182,22 +182,22 @@ public class UserController {
     @PostMapping("/depositMoney")
     public ResponseEntity<ResponseDTO> depositMoney(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") BigDecimal amount){
         ResponseDTO responseDTO = new ResponseDTO();
-        AccountDTO depositamount = userService.depositMoney(accountId , amount);
+        AccountDTO depositAmount = userService.depositMoney(accountId , amount);
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
         responseDTO.setMessage("Amount deposited successfully");
-        responseDTO.setAccountdtos(List.of(depositamount));
+        responseDTO.setAccountdtos(List.of(depositAmount));
         return new  ResponseEntity<>(responseDTO , HttpStatus.OK);
     }
 
     @PostMapping("/withdrawMoney")
     public ResponseEntity<ResponseDTO> withdrawMoney(@RequestParam(value = "accountId") long accountId, @RequestParam("amount") BigDecimal amount){
         ResponseDTO responseDTO = new ResponseDTO();
-        AccountDTO withdrawamount = userService.withdrawMoney(accountId , amount);
+        AccountDTO withdrawAmount = userService.withdrawMoney(accountId , amount);
         responseDTO.setStatuscode(HttpStatus.OK.value());
         responseDTO.setError(false);
         responseDTO.setMessage("Amount withdraw successfully");
-        responseDTO.setAccountdtos(List.of(withdrawamount));
+        responseDTO.setAccountdtos(List.of(withdrawAmount));
 
         return new ResponseEntity<>(responseDTO , HttpStatus.OK);
 

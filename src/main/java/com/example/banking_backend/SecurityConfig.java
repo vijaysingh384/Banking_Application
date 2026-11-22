@@ -1,6 +1,6 @@
 package com.example.banking_backend;
 
-import com.example.banking_backend.Repositary.UserRepositary;
+import com.example.banking_backend.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +28,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
-public class SequrityConfig {
+public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -75,8 +75,8 @@ public class SequrityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(UserRepositary userRepositary) {
-        return username -> userRepositary.findByUsername(username)
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return username -> userRepository.findByUsername(username)
                 .map(userDTO -> User.withUsername(userDTO.getUsername())
                         .password(userDTO.getPassword())
                         .roles(userDTO.getRole() == null ? "USER" : userDTO.getRole())

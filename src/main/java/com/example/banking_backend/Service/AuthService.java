@@ -2,7 +2,7 @@ package com.example.banking_backend.Service;
 
 import com.example.banking_backend.Exception.ResourceNotFoundException;
 import com.example.banking_backend.Model.UserDTO;
-import com.example.banking_backend.Repositary.UserRepositary;
+import com.example.banking_backend.Repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Transactional
 public class AuthService {
     @Autowired
-    private UserRepositary userRepositary;
+    private UserRepository userRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -28,7 +28,7 @@ public class AuthService {
         if (userDTO.getPassword() == null || userDTO.getPassword().length() < 8) {
             throw new IllegalArgumentException("Password must be at least 8 characters");
         }
-        if (userRepositary.existsByUsername(username)) {
+        if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists");
         }
 
@@ -41,13 +41,13 @@ public class AuthService {
         userDTO.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         userDTO.setRole(role);
 
-        UserDTO savedUser = userRepositary.save(userDTO);
+        UserDTO savedUser = userRepository.save(userDTO);
         savedUser.setUserId(savedUser.getId());
-        return userRepositary.save(savedUser);
+        return userRepository.save(savedUser);
     }
 
     public UserDTO getUserByUsername(String username) {
-        return userRepositary.findByUsername(username)
+        return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found for this username: " + username));
     }
 }

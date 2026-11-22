@@ -1,7 +1,7 @@
 package com.example.banking_backend.Config;
 
 import com.example.banking_backend.Model.UserDTO;
-import com.example.banking_backend.Repositary.UserRepositary;
+import com.example.banking_backend.Repository.UserRepository;
 import com.example.banking_backend.Service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AdminInitializer implements CommandLineRunner {
     @Autowired
-    private UserRepositary userRepositary;
+    private UserRepository userRepository;
 
     @Autowired
     private AuthService authService;
@@ -29,7 +29,7 @@ public class AdminInitializer implements CommandLineRunner {
                     "ADMIN_PASSWORD is not set. Set the ADMIN_PASSWORD environment variable to a strong "
                             + "password before starting the application.");
         }
-        if (userRepositary.existsByUsername(adminUsername)) {
+        if (userRepository.existsByUsername(adminUsername)) {
             return;
         }
         UserDTO admin = new UserDTO();
