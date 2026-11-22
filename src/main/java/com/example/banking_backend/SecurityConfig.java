@@ -49,9 +49,9 @@ public class SecurityConfig {
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 .accessDeniedHandler((request, response, accessDeniedException)
                         -> response.sendError(HttpStatus.FORBIDDEN.value(), "You are not allowed to access this resource"))
-            )
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/signup", "/login", "/csrf").permitAll()
+            ).authorizeHttpRequests(auth -> auth
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/signup", "/login", "/csrf").permitAll()
                 .requestMatchers("/admin/**", "/adduser", "/users", "/users/**",
                         "/accounts", "/account/**", "/loans").hasRole("ADMIN")
                 .anyRequest().authenticated()
